@@ -1,6 +1,6 @@
 from typing import Dict, List, Optional, Set, Tuple
 
-__all__ = ['EPSILON', 'DFAState', 'NFAState', 'nfa2dfa']
+__all__ = ['EPSILON', 'DFAState', 'NFAState', 'nfa_to_dfa']
 
 EPSILON: str = 'ε'
 
@@ -85,7 +85,7 @@ class NFAState:
         return f'NFAState({self.name!r})'
 
 
-def nfa2dfa(nfa_start: NFAState) -> DFAState:
+def nfa_to_dfa(nfa_start: NFAState) -> DFAState:
     def move(states: Set[NFAState], label: str) -> Set[NFAState]:
         resulting_states: Set[NFAState] = set()
         for state in states:

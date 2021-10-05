@@ -1,4 +1,4 @@
-from fsa import DFAState, nfa2dfa
+from fsa import DFAState, nfa_to_dfa
 
 from regex_parser import Parser
 
@@ -31,5 +31,5 @@ def compile(string: str):
     nfa_start, nfa_end = node.build_nfa(name_generator)
     nfa_end.set_accepting()
 
-    dfa_start = nfa2dfa(nfa_start)
+    dfa_start = nfa_to_dfa(nfa_start)
     return CompiledRegex(string, dfa_start)
