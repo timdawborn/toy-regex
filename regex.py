@@ -25,11 +25,16 @@ class NameGenerator:
 
 
 def compile(string: str):
+    # Parse the regex string into a tree of Node objects.
     node = Parser(string).parse()
 
+    # Convert the tree of Node objects into a graph of NFAState objects.
     name_generator = NameGenerator()
     nfa_start, nfa_end = node.build_nfa(name_generator)
     nfa_end.set_accepting()
 
+    # Convert the NFA to a DFA.
     dfa_start = nfa_to_dfa(nfa_start)
+
+    # Return the DFA wrapped in a helper class.
     return CompiledRegex(string, dfa_start)

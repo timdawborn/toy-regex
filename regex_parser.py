@@ -30,10 +30,13 @@ class TextNode(Node):
         self.token = token
 
     def build_nfa(self, name_generator) -> Tuple[NFAState, NFAState]:
-        q0 = NFAState(name_generator())
-        q1 = NFAState(name_generator())
-        q0.add_edge(self.token, q1)
-        return (q0, q1)
+        q_start = NFAState(name_generator())
+        q_end = NFAState(name_generator())
+        q_start.add_edge(self.token, q_end)
+        return (q_start, q_end)
+
+    def __str__(self):
+        return f'TextNode({self.token!r})'
 
 
 class StarNode(Node):
@@ -51,6 +54,9 @@ class StarNode(Node):
         child_end.add_edge(EPSILON, q_end)
         child_end.add_edge(EPSILON, child_start)
         return (q_start, q_end)
+
+    def __str__(self):
+        return f'StarNode({self.child})'
 
 
 class UnionNode(Node):
@@ -72,6 +78,9 @@ class UnionNode(Node):
         child2_end.add_edge(EPSILON, q_end)
         return (q_start, q_end)
 
+    def __str__(self):
+        return f'UnionNode({self.child1}, {self.child2})'
+
 
 class ConcatNode(Node):
     children: List[Node]
@@ -89,6 +98,9 @@ class ConcatNode(Node):
             prev_start = child_end
         child_end.add_edge(EPSILON, q_end)
         return (q_start, q_end)
+
+    def __str__(self):
+        return f'ConcatNode({self.children})'
 
 
 class ParseError(Exception):
@@ -153,7 +165,10 @@ class Parser:
                 break
         if len(nodes) == 0:
             raise ParseError('Could not find any <basic-re>s while parsing <simple-re>.')
-        return ConcatNode(*nodes)
+        elif len(nodes) == 1:
+            return nodes[0]
+        else:
+            return ConcatNode(*nodes)
 
     def _parse_re(self) -> Node:
         node = self._parse_simple_re()

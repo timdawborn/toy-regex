@@ -39,7 +39,10 @@ class DFAState:
         self.is_accepting = True
 
     def __str__(self):
-        return f'DFAState({self.name!r})'
+        return f'DFAState({self.name!r}, {self.edges}, {self.is_accepting})'
+
+    def __repr__(self):
+        return str(self)
 
 
 class NFAState:
@@ -75,6 +78,18 @@ class NFAState:
             labels -= {EPSILON}
         return labels
 
+    def _get_epsilon_closure(self, seen: Set['NFAState']) -> Set['NFAState']:
+        result = {self}
+        targets = self.edges.get(EPSILON, set())
+        for target in targets:
+            if target not in seen:
+                seen.add(target)
+                result.update(target._get_epsilon_closure(seen))
+        return result
+
+    def get_epsilon_closure(self) -> Set['NFAState']:
+        return self._get_epsilon_closure(set())
+
     def follow_edge(self, label: str) -> Set['NFAState']:
         return self.edges.get(label, set())
 
@@ -82,7 +97,10 @@ class NFAState:
         self.is_accepting = True
 
     def __str__(self):
-        return f'NFAState({self.name!r})'
+        return f'NFAState({self.name!r}, {self.edges}, {self.is_accepting})'
+
+    def __repr__(self):
+        return str(self)
 
 
 def nfa_to_dfa(nfa_start: NFAState) -> DFAState:
@@ -93,7 +111,10 @@ def nfa_to_dfa(nfa_start: NFAState) -> DFAState:
         return resulting_states
 
     def epsilon_closure(states: Set[NFAState]) -> Set[NFAState]:
-        return move(states, EPSILON)
+        resulting_states: Set[NFAState] = set()
+        for state in states:
+            resulting_states.update(state.get_epsilon_closure())
+        return resulting_states
 
     def make_dfa_name(states: Set[NFAState]) -> str:
         names = sorted(state.name for state in states)
@@ -115,7 +136,7 @@ def nfa_to_dfa(nfa_start: NFAState) -> DFAState:
     dfa_start = get_or_create_dfa_state_for_nfa_states(nfa_start_states)
 
     todo: List[Tuple[DFAState, Set[NFAState]]] = [(dfa_start, nfa_start_states)]
-    todo_names: Set[str] = {dfa_start.name}  # Set of processed DFAState names.
+    seen: Set[DFAState] = {dfa_start}
 
     while len(todo) != 0:
         # Grab the next item off the todo list.
@@ -133,8 +154,8 @@ def nfa_to_dfa(nfa_start: NFAState) -> DFAState:
                 new_dfa_state = get_or_create_dfa_state_for_nfa_states(new_nfa_states)
                 dfa_state.add_edge(label, new_dfa_state)
 
-                if new_dfa_state.name not in todo_names:
+                if new_dfa_state not in seen:
                     todo.append((new_dfa_state, new_nfa_states))
-                    todo_names.add(new_dfa_state.name)
+                    seen.add(new_dfa_state)
 
     return dfa_start
